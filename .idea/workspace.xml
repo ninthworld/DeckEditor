@@ -7,22 +7,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="cdb932d9-7e58-4d94-93a9-e7b232ef17da" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/lib/json-simple-1.1.1.jar" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/artifacts/DeckEditor_jar.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/libraries/json_simple_1_1_1.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/vcs.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/META-INF/MANIFEST.MF" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/org/ninthworld/deckeditor/Controller.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/org/ninthworld/deckeditor/Main.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/org/ninthworld/deckeditor/deckeditor.fxml" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/out/production/DeckEditor/sample/Controller.class" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/out/production/DeckEditor/sample/Main.class" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/out/production/DeckEditor/sample/sample.fxml" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/src/sample/Controller.java" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/src/sample/Main.java" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/src/sample/sample.fxml" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DeckEditor.iml" afterPath="$PROJECT_DIR$/DeckEditor.iml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/ninthworld/deckeditor/Main.java" afterPath="$PROJECT_DIR$/src/org/ninthworld/deckeditor/Main.java" />
     </list>
     <ignored path="JavaFxApplication.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -85,12 +70,12 @@
       <file leaf-file-name="Main.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/org/ninthworld/deckeditor/Main.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="612">
-              <caret line="694" column="68" selection-start-line="694" selection-start-column="68" selection-end-line="694" selection-end-column="68" />
+            <state relative-caret-position="437">
+              <caret line="848" column="69" selection-start-line="848" selection-start-column="69" selection-end-line="848" selection-end-column="69" />
               <folding>
                 <element signature="imports" expanded="true" />
-                <element signature="e#33197#33198#0" expanded="true" />
-                <element signature="e#33279#33280#0" expanded="true" />
+                <element signature="e#33233#33234#0" expanded="true" />
+                <element signature="e#33315#33316#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -693,8 +678,8 @@
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="imports" expanded="true" />
-            <element signature="e#33197#33198#0" expanded="true" />
-            <element signature="e#33279#33280#0" expanded="true" />
+            <element signature="e#33233#33234#0" expanded="true" />
+            <element signature="e#33315#33316#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -746,8 +731,8 @@
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="imports" expanded="true" />
-            <element signature="e#33197#33198#0" expanded="true" />
-            <element signature="e#33279#33280#0" expanded="true" />
+            <element signature="e#33233#33234#0" expanded="true" />
+            <element signature="e#33315#33316#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -777,8 +762,8 @@
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="imports" expanded="true" />
-            <element signature="e#33197#33198#0" expanded="true" />
-            <element signature="e#33279#33280#0" expanded="true" />
+            <element signature="e#33233#33234#0" expanded="true" />
+            <element signature="e#33315#33316#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -808,8 +793,8 @@
           <caret line="8" column="0" selection-start-line="8" selection-start-column="0" selection-end-line="8" selection-end-column="0" />
           <folding>
             <element signature="imports" expanded="true" />
-            <element signature="e#33197#33198#0" expanded="true" />
-            <element signature="e#33279#33280#0" expanded="true" />
+            <element signature="e#33233#33234#0" expanded="true" />
+            <element signature="e#33315#33316#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -917,12 +902,12 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/org/ninthworld/deckeditor/Main.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="612">
-          <caret line="694" column="68" selection-start-line="694" selection-start-column="68" selection-end-line="694" selection-end-column="68" />
+        <state relative-caret-position="437">
+          <caret line="848" column="69" selection-start-line="848" selection-start-column="69" selection-end-line="848" selection-end-column="69" />
           <folding>
             <element signature="imports" expanded="true" />
-            <element signature="e#33197#33198#0" expanded="true" />
-            <element signature="e#33279#33280#0" expanded="true" />
+            <element signature="e#33233#33234#0" expanded="true" />
+            <element signature="e#33315#33316#0" expanded="true" />
           </folding>
         </state>
       </provider>

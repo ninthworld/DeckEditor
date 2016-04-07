@@ -2,15 +2,14 @@ package org.ninthworld.deckeditor;
 
 import javafx.application.Application;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.chart.BarChart;
-import javafx.scene.chart.PieChart;
-import javafx.scene.chart.StackedBarChart;
+import javafx.scene.chart.*;
 import javafx.scene.control.*;
 import javafx.scene.effect.BlendMode;
 import javafx.scene.image.Image;
@@ -31,6 +30,7 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import java.io.*;
+import java.lang.reflect.Array;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.*;
@@ -681,6 +681,7 @@ public class Main extends Application {
                 }
 
                 for(int i=0; i<deckCardMap.size(); i++){
+                    deckCardMap.get(i).clear();
                     if (deckObj.containsKey("section" + i)) {
                         JSONArray cardsArray = (JSONArray) deckObj.get("section" + i);
                         for(Object card : cardsArray){
@@ -779,9 +780,36 @@ public class Main extends Application {
     }
 
     private void updateCharts(){
-        int[] typeCounts = new int[7];
+        int highestCmc = 0;
+        ArrayList<HashMap<String, Integer>> cmcColorWeights = new ArrayList<>();
+        for(int i=0; i<21; i++){
+            cmcColorWeights.add(new HashMap<>());
+        }
 
-        deckCardMap.get(1).keySet().forEach(cardData -> {
+        int[] typeCounts = new int[7];
+        String[] colorCode = new String[]{"C", "G", "U", "R", "B", "W"};
+        for(CardData cardData : deckCardMap.get(1).keySet()){
+
+            List<String> colors = new ArrayList<>();
+            if(cardData.getColorIdentity() == null){
+                colors.add("C");
+            }else{
+                colors.addAll(Arrays.asList(cardData.getColorIdentity()));
+            }
+
+            HashMap<String, Integer> colorWeights = cmcColorWeights.get(cardData.getCmc());
+            colors.forEach(color -> {
+                if(colorWeights.containsKey(color)){
+                    colorWeights.put(color, colorWeights.get(color) + 1);
+                }else{
+                    colorWeights.put(color, 1);
+                }
+            });
+
+            if(cardData.getCmc() > highestCmc){
+                highestCmc = cardData.getCmc();
+            }
+
             if(cardData.getTypes() != null) {
                 Arrays.asList(cardData.getTypes()).forEach(type -> {
                     switch(type.toLowerCase()){
@@ -809,7 +837,26 @@ public class Main extends Application {
                     }
                 });
             }
-        });
+        }
+
+        ArrayList<XYChart.Series<String, Integer>> manaCurveSeries = new ArrayList<>();
+        for(int i=0; i<colorCode.length; i++) {
+            XYChart.Series<String, Integer> series = new XYChart.Series();
+
+            for(int j=0; j<=highestCmc; j++){
+                int count = 0;
+                if(cmcColorWeights.get(j).containsKey(colorCode[i])){
+                    count = cmcColorWeights.get(j).get(colorCode[i]);
+                }
+
+                series.getData().add(new XYChart.Data(Integer.toString(j), count));
+            }
+
+            manaCurveSeries.add(series);
+        }
+        manaCurveChart.getData().setAll(manaCurveSeries);
+        manaCurveChart.autosize();
+        //manaCurveChart.setStyle(".default-color0.chart-series-lines { -fx-stroke: red; }");
 
         typePieChart.setLegendVisible(false);
         typePieChart.setData(
@@ -824,7 +871,7 @@ public class Main extends Application {
                 )
         );
 
-        String[] colors = new String[]{
+        String[] typeColors = new String[]{
                 "#4572a7",
                 "#b21c9b",
                 "#80699b",
@@ -835,8 +882,8 @@ public class Main extends Application {
         };
 
         int i = 0;
-        for(PieChart.Data data : typePieChart.getData()){
-            data.getNode().setStyle("-fx-pie-color: " + colors[i%colors.length] + ";");
+        for(PieChart.Data data : typePieChart.getData()) {
+            data.getNode().setStyle("-fx-pie-color: " + typeColors[i % typeColors.length] + ";");
             i++;
         }
     }
