@@ -2,7 +2,6 @@ package org.ninthworld.deckeditor;
 
 import javafx.application.Application;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.scene.Group;
@@ -34,12 +33,10 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import javax.smartcardio.Card;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
-import java.lang.reflect.Array;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.*;
@@ -81,6 +78,7 @@ public class Main extends Application {
     private Button newButton, openButton, saveButton, importButton, exportButton;
 
     private StackedBarChart manaCurveChart;
+    private NumberAxis manaCurveAxis;
     private PieChart typePieChart, costManaPieChart;
 
     private File deckFile = null;
@@ -90,7 +88,9 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        Parent root = FXMLLoader.load(getClass().getResource("deckeditor.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/deckeditor.fxml"));
+        loader.setController(new Main());
+        Parent root = loader.load(); // FXMLLoader.load(getClass().getResource("deckeditor.fxml"));
         primaryStage.setTitle(titlePrefix + "Untitled [*]");
         primaryStage.setScene(new Scene(root, 1280, 680));
         primaryStage.show();
@@ -112,7 +112,10 @@ public class Main extends Application {
         cardPreview.fitHeightProperty().bind(((GridPane) cardPreview.getParent()).heightProperty());
         cardPreviewCache = new HashMap<>();
 
+        primaryStage.getScene().getStylesheets().add("/style.css");
         manaCurveChart = (StackedBarChart) scene.lookup("#manaCurveChart");
+        manaCurveAxis = (NumberAxis) manaCurveChart.getYAxis();
+        manaCurveAxis.setAutoRanging(false);
         typePieChart = (PieChart) scene.lookup("#typePieChart");
         costManaPieChart = (PieChart) scene.lookup("#costManaPieChart");
 
@@ -602,26 +605,38 @@ public class Main extends Application {
 
     }
 
+    private int savePrompt(){
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("Save Changes?");
+        alert.setHeaderText("The deck has been modified.");
+        alert.setContentText("Do you want to save changes?");
+
+        ButtonType saveBtn = new ButtonType("Save");
+        ButtonType discardBtn = new ButtonType("Discard");
+        ButtonType cancelBtn = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+        alert.getButtonTypes().setAll(saveBtn, discardBtn, cancelBtn);
+
+        Optional<ButtonType> result = alert.showAndWait();
+        if(result.get() == saveBtn){
+            return 0;
+        }else if(result.get() == discardBtn){
+            return 1;
+        }else{
+            return 2;
+        }
+    }
+
     private void closeWindow(Stage primaryStage){
         if(!isSaved) {
-            Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert.setTitle("Save Changes?");
-            alert.setHeaderText("The deck has been modified.");
-            alert.setContentText("Do you want to save changes?");
-
-            ButtonType saveBtn = new ButtonType("Save");
-            ButtonType discardBtn = new ButtonType("Discard");
-            ButtonType cancelBtn = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
-            alert.getButtonTypes().setAll(saveBtn, discardBtn, cancelBtn);
-
-            Optional<ButtonType> result = alert.showAndWait();
-            if(result.get() == saveBtn){
-                actionSaveDeck(primaryStage);
-                primaryStage.close();
-            }else if(result.get() == discardBtn){
-                primaryStage.close();
-            }else{
-                alert.close();
+            int returnCode = savePrompt();
+            switch(returnCode){
+                case 0:
+                    actionSaveDeck(primaryStage);
+                    primaryStage.close();
+                    break;
+                case 1:
+                    primaryStage.close();
+                    break;
             }
         }else{
             primaryStage.close();
@@ -629,6 +644,22 @@ public class Main extends Application {
     }
 
     private void actionNewDeck(Stage primaryStage){
+        if(!isSaved) {
+            int returnCode = savePrompt();
+            switch(returnCode){
+                case 0:
+                    actionSaveDeck(primaryStage);
+                    break;
+                case 1:
+                    doNewDeck(primaryStage);
+                    break;
+            }
+        }else{
+            doNewDeck(primaryStage);
+        }
+    }
+
+    private void doNewDeck(Stage primaryStage){
         deckFile = null;
         deckNameTextField.setText("Untitled");
         for(int i=0; i<deckCardMap.size(); i++){
@@ -657,6 +688,22 @@ public class Main extends Application {
     }
 
     private void actionOpenDeck(Stage primaryStage){
+        if(!isSaved) {
+            int returnCode = savePrompt();
+            switch(returnCode){
+                case 0:
+                    actionSaveDeck(primaryStage);
+                    break;
+                case 1:
+                    doOpenDeck(primaryStage);
+                    break;
+            }
+        }else{
+            doOpenDeck(primaryStage);
+        }
+    }
+
+    private void doOpenDeck(Stage primaryStage){
         FileChooser fileChooser = new FileChooser();
         fileChooser.getExtensionFilters().addAll(
                 new FileChooser.ExtensionFilter("All Supported Formats", "*.dec; *.deck; *.jdeck")
@@ -664,6 +711,11 @@ public class Main extends Application {
         File tempFile = fileChooser.showOpenDialog(primaryStage);
 
         if(tempFile != null) {
+            for(int i=0; i<deckCardMap.size(); i++){
+                deckCardMap.get(i).clear();
+                updateDeckCardListView(deckListView.get(i), deckCardMap.get(i));
+            }
+
             String ext = tempFile.getName().substring(tempFile.getName().lastIndexOf(".") + 1).toLowerCase();
             switch(ext){
                 case "dec":
@@ -776,12 +828,8 @@ public class Main extends Application {
                         break;
                 }
             }
-
-            System.out.println(elements[1] == null);
-
             for(int i=0; i<elements.length; i++){
                 if(elements[i] != null) {
-                    System.out.println(elements[i].getNodeName());
                     NodeList children = elements[i].getChildNodes();
                     for (int j = 0; j < children.getLength(); j++) {
                         org.w3c.dom.Node child = children.item(j);
@@ -1039,18 +1087,22 @@ public class Main extends Application {
         for(CardData cardData : deckCardMap.get(1).keySet()){
 
             List<String> colors = new ArrayList<>();
-            if(cardData.getColorIdentity() == null){
-                colors.add("C");
+            if(!cardData.getType().toLowerCase().contains("land")) {
+                if (cardData.getColorIdentity() == null) {
+                    colors.add("C");
+                } else {
+                    colors.addAll(Arrays.asList(cardData.getColorIdentity()));
+                }
             }else{
-                colors.addAll(Arrays.asList(cardData.getColorIdentity()));
+                continue;
             }
 
             HashMap<String, Integer> colorWeights = cmcColorWeights.get(cardData.getCmc());
             colors.forEach(color -> {
                 if(colorWeights.containsKey(color)){
-                    colorWeights.put(color, colorWeights.get(color) + 1);
+                    colorWeights.put(color, colorWeights.get(color) + deckCardMap.get(1).get(cardData));
                 }else{
-                    colorWeights.put(color, 1);
+                    colorWeights.put(color, deckCardMap.get(1).get(cardData));
                 }
             });
 
@@ -1088,6 +1140,7 @@ public class Main extends Application {
         }
 
         ArrayList<XYChart.Series<String, Integer>> manaCurveSeries = new ArrayList<>();
+        int[] seriesHeight = new int[colorCode.length];
         for(int i=0; i<colorCode.length; i++) {
             XYChart.Series<String, Integer> series = new XYChart.Series();
 
@@ -1098,13 +1151,20 @@ public class Main extends Application {
                 }
 
                 series.getData().add(new XYChart.Data(Integer.toString(j), count));
+                seriesHeight[i] += count;
             }
 
             manaCurveSeries.add(series);
         }
         manaCurveChart.getData().setAll(manaCurveSeries);
-        manaCurveChart.autosize();
-        //manaCurveChart.setStyle(".default-color0.chart-series-lines { -fx-stroke: red; }");
+
+        int maxHeight = 0;
+        for(int num : seriesHeight){
+            if(num > maxHeight){
+                maxHeight = num;
+            }
+        }
+        manaCurveAxis.setUpperBound(maxHeight + 2);
 
         typePieChart.setLegendVisible(false);
         typePieChart.setData(
@@ -1156,9 +1216,9 @@ public class Main extends Application {
             updateCardInfo(card);
 
             if(!cardPreviewCache.containsKey(card.getMultiverseId())) {
-                File hqCard = new File("res/cache/hqcards/" + card.getSetCode() + "/" + card.getName().replaceAll("\\\"", "") + (card.hasVariations() ? card.getVariationNum() : "") + ".full.jpg");
+                File hqCard = new File("res/cache/hqcards/" + card.getSetCode() + "/" + card.getNameUnmodified().replaceAll("\\\"", "") + (card.hasVariations() ? card.getVariationNum() : "") + ".full.jpg");
                 if (!hqCard.exists()) {
-                    File lqCard = new File("res/cache/lqcards/" + card.getSetCode() + "/" + card.getName().replaceAll("\\\"", "") + (card.hasVariations() ? card.getVariationNum() : "") + ".full.jpg");
+                    File lqCard = new File("res/cache/lqcards/" + card.getSetCode() + "/" + card.getNameUnmodified().replaceAll("\\\"", "") + (card.hasVariations() ? card.getVariationNum() : "") + ".full.jpg");
                     if (!lqCard.exists()) {
                         // Download
                         try {

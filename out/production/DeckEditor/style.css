@@ -1,0 +1,6 @@
+.default-color0.chart-bar { -fx-bar-fill: grey; -fx-border-color: lightgrey; }
+.default-color1.chart-bar { -fx-bar-fill: green; -fx-border-color: lightgrey; }
+.default-color2.chart-bar { -fx-bar-fill: blue; -fx-border-color: lightgrey; }
+.default-color3.chart-bar { -fx-bar-fill: red; -fx-border-color: lightgrey; }
+.default-color4.chart-bar { -fx-bar-fill: black; -fx-border-color: lightgrey; }
+.default-color5.chart-bar { -fx-bar-fill: white; -fx-border-color: lightgrey; }

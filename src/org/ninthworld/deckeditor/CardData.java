@@ -57,6 +57,10 @@ public class CardData {
         this.setCode = setCode;
     }
 
+    public String getNameUnmodified(){
+        return name;
+    }
+
     public String getName() {
         if(this.getNames() != null && this.getNames().length > 1){
             String text = "";
