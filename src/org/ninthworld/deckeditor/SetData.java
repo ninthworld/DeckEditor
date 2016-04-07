@@ -151,6 +151,14 @@ public class SetData {
                         cardData.setText(cardObj.get("text").toString());
                     }
 
+                    if(cardObj.containsKey("power")){
+                        cardData.setPower(cardObj.get("power").toString());
+                    }
+
+                    if(cardObj.containsKey("toughness")){
+                        cardData.setToughness(cardObj.get("toughness").toString());
+                    }
+
                     if(cardObj.containsKey("names")){
                         JSONArray array = (JSONArray) cardObj.get("names");
                         String[] strs = new String[array.size()];

@@ -22,6 +22,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.TextAlignment;
+import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.json.simple.JSONArray;
@@ -55,7 +56,7 @@ public class Main extends Application {
     private ArrayList<CardData> searchCardList;
 
     private ListView searchListView;
-    private TextArea cardInfoTextArea;
+    private WebView cardInfoWebView;
     private ImageView cardPreview;
     private Image cardBack;
     private HashMap<String, Image> cardPreviewCache;
@@ -83,12 +84,12 @@ public class Main extends Application {
     public void start(Stage primaryStage) throws Exception {
         Parent root = FXMLLoader.load(getClass().getResource("deckeditor.fxml"));
         primaryStage.setTitle(titlePrefix + "Untitled [*]");
-        primaryStage.setScene(new Scene(root, 1280, 800));
+        primaryStage.setScene(new Scene(root, 1280, 680));
         primaryStage.show();
 
         Scene scene = primaryStage.getScene();
 
-        cardInfoTextArea = (TextArea) scene.lookup("#cardInfoTextArea");
+        cardInfoWebView = (WebView) scene.lookup("#cardInfoWebView");
         cardPreview = (ImageView) scene.lookup("#cardPreview");
         cardBack = new Image(getClass().getResource("/symbols/back.jpg").toString());
         cardPreview.setImage(cardBack);
@@ -776,7 +777,11 @@ public class Main extends Application {
     }
 
     private void updateCardInfo(CardData card) {
-        cardInfoTextArea.setText(Arrays.toString(card.getColorIdentity()));
+        String content = ""
+                + "<p><b style='font-size: 14pt;'>" + card.getName() + "</b> " + card.getManaCost() + "</p>"
+                + "<p>" + card.getType() + (card.getPower() != "" && card.getToughness() != "" ? " [" + card.getPower() + "/" + card.getToughness() + "]" : "") + "</p>"
+                + "<p>" + card.getText().replaceAll("\n", "<br />") + "</p>";
+        cardInfoWebView.getEngine().loadContent(content);
     }
 
     private void updateCharts(){
@@ -1054,18 +1059,7 @@ public class Main extends Application {
             setCodeLabel.setVisible(false);
             setCodeLabel.setText(Integer.toString(cards.indexOf(cardData)));
 
-            if(cardData.getNames() != null && cardData.getNames().length > 1){
-                String text = "";
-                for(int i=0; i<cardData.getNames().length; i++){
-                    text += cardData.getNames()[i];
-                    if(i < cardData.getNames().length-1){
-                        text += " // ";
-                    }
-                }
-                cardLabel.setText(text);
-            }else {
-                cardLabel.setText(cardData.getName());
-            }
+            cardLabel.setText(cardData.getName());
 
             Group group = new Group();
             ImageView typeImageView = new ImageView();
@@ -1132,18 +1126,7 @@ public class Main extends Application {
             setCodeLabel.setVisible(false);
             setCodeLabel.setText(Integer.toString(cardList.indexOf(cardData)));
 
-            if(cardData.getNames() != null && cardData.getNames().length > 1){
-                String text = "";
-                for(int i=0; i<cardData.getNames().length; i++){
-                    text += cardData.getNames()[i];
-                    if(i < cardData.getNames().length-1){
-                        text += " // ";
-                    }
-                }
-                cardLabel.setText(text);
-            }else {
-                cardLabel.setText(cardData.getName());
-            }
+            cardLabel.setText(cardData.getName());
 
             Group group = new Group();
             ImageView typeImageView = new ImageView();

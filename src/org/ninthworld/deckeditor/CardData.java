@@ -58,7 +58,18 @@ public class CardData {
     }
 
     public String getName() {
-        return name;
+        if(this.getNames() != null && this.getNames().length > 1){
+            String text = "";
+            for(int i=0; i<this.getNames().length; i++){
+                text += this.getNames()[i];
+                if(i < this.getNames().length-1){
+                    text += " // ";
+                }
+            }
+            return text;
+        }else {
+            return name;
+        }
     }
 
     public void setName(String name) {
