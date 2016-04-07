@@ -5,6 +5,9 @@ ehthumbs.db
 # Folder config file
 Desktop.ini
 
+res/cache
+out/artifacts
+
 # Recycle Bin used on file shares
 $RECYCLE.BIN/
 
