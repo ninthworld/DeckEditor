@@ -29,7 +29,15 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
+import javax.smartcardio.Card;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 import java.lang.reflect.Array;
 import java.net.URISyntaxException;
@@ -88,6 +96,13 @@ public class Main extends Application {
         primaryStage.show();
 
         Scene scene = primaryStage.getScene();
+
+        // Control + S
+        scene.setOnKeyPressed(e -> {
+            if(e.isControlDown() && e.getCode() == KeyCode.S){
+                actionSaveDeck(primaryStage);
+            }
+        });
 
         cardInfoWebView = (WebView) scene.lookup("#cardInfoWebView");
         cardPreview = (ImageView) scene.lookup("#cardPreview");
@@ -635,31 +650,7 @@ public class Main extends Application {
         }
 
         if(deckFile != null){
-            JSONObject deckObj = new JSONObject();
-            deckObj.put("name", deckNameTextField.getText());
-
-            for(int i=0; i<deckCardMap.size(); i++){
-                JSONArray cardsArray = new JSONArray();
-                for(CardData cardData : deckCardMap.get(i).keySet()){
-                    JSONObject cardObj = new JSONObject();
-
-                    cardObj.put("count", deckCardMap.get(i).get(cardData));
-                    cardObj.put("multiverseId", cardData.getMultiverseId());
-
-                    cardsArray.add(cardObj);
-                }
-
-                deckObj.put("section" + i, cardsArray);
-            }
-
-            try {
-                FileWriter fw = new FileWriter(deckFile);
-                fw.write(deckObj.toJSONString());
-                fw.flush();
-                fw.close();
-            } catch (IOException e1) {
-                e1.printStackTrace();
-            }
+            saveAsJDeck(deckFile);
 
             setSaved(true, primaryStage);
         }
@@ -668,49 +659,22 @@ public class Main extends Application {
     private void actionOpenDeck(Stage primaryStage){
         FileChooser fileChooser = new FileChooser();
         fileChooser.getExtensionFilters().addAll(
-                new FileChooser.ExtensionFilter("JDECK", "*.jdeck")
+                new FileChooser.ExtensionFilter("All Supported Formats", "*.dec; *.deck; *.jdeck")
         );
-        deckFile = fileChooser.showOpenDialog(primaryStage);
+        File tempFile = fileChooser.showOpenDialog(primaryStage);
 
-        if(deckFile != null) {
-            try {
-                JSONParser parser = new JSONParser();
-                JSONObject deckObj = (JSONObject) parser.parse(new FileReader(deckFile));
-
-                if (deckObj.containsKey("name")) {
-                    deckNameTextField.setText(deckObj.get("name").toString());
-                }
-
-                for(int i=0; i<deckCardMap.size(); i++){
-                    deckCardMap.get(i).clear();
-                    if (deckObj.containsKey("section" + i)) {
-                        JSONArray cardsArray = (JSONArray) deckObj.get("section" + i);
-                        for(Object card : cardsArray){
-                            JSONObject cardObj = (JSONObject) card;
-                            int count = 1;
-
-                            if (cardObj.containsKey("count")) {
-                                count = Integer.parseInt(cardObj.get("count").toString());
-                            }
-
-                            if (cardObj.containsKey("multiverseId")) {
-                                for (CardData cardData : allCards) {
-                                    if (cardData.getMultiverseId().equals(cardObj.get("multiverseId").toString())) {
-                                        deckCardMap.get(i).put(cardData, count);
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    updateDeckCardListView(deckListView.get(i), deckCardMap.get(i));
-                }
-
-            } catch (IOException e1) {
-                e1.printStackTrace();
-            } catch (ParseException e1) {
-                e1.printStackTrace();
+        if(tempFile != null) {
+            String ext = tempFile.getName().substring(tempFile.getName().lastIndexOf(".") + 1).toLowerCase();
+            switch(ext){
+                case "dec":
+                    openDec(tempFile);
+                    break;
+                case "deck":
+                    openDeck(tempFile);
+                    break;
+                case "jdeck":
+                    openJDeck(deckFile = tempFile);
+                    break;
             }
 
             updateCharts();
@@ -719,11 +683,290 @@ public class Main extends Application {
     }
 
     private void actionImportDeck(Stage primaryStage){
-
+        actionOpenDeck(primaryStage);
     }
 
     private void actionExportDeck(Stage primaryStage){
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setInitialFileName(deckNameTextField.getText() + ".dec");
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("DEC", "*.dec"),
+                new FileChooser.ExtensionFilter("DECK", "*.deck"),
+                new FileChooser.ExtensionFilter("JDECK", "*.jdeck")
+        );
+        File tempFile = fileChooser.showSaveDialog(primaryStage);
 
+        if(tempFile != null) {
+            String ext = tempFile.getName().substring(tempFile.getName().lastIndexOf(".") + 1).toLowerCase();
+            switch(ext){
+                case "dec":
+                    saveAsDec(tempFile);
+                    break;
+                case "deck":
+                    saveAsDeck(tempFile);
+                    break;
+                case "jdeck":
+                    saveAsJDeck(deckFile = tempFile);
+                    break;
+            }
+        }
+    }
+
+    private void openDec(File file){
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(file));
+            String line;
+            boolean sb = false;
+            while((line = br.readLine()) != null){
+                if(line.startsWith("//")){
+                    sb = true;
+                }else{
+                    if(sb){
+                        line = line.replaceAll("SB: ", "");
+                    }
+
+                    String count = line.substring(0, line.indexOf(" "));
+                    String name = line.substring(line.indexOf(" ")+1);
+
+                    CardData card = null;
+                    for(CardData cardData : allCards){
+                        if(cardData.getName().equalsIgnoreCase(name)){
+                            card = cardData;
+                            break;
+                        }
+                    }
+
+                    if(card != null) {
+                        deckCardMap.get((sb ? 2 : 1)).put(card, Integer.parseInt(count));
+                    }
+                }
+            }
+            updateDeckCardListView(deckListView.get(1), deckCardMap.get(1));
+            updateDeckCardListView(deckListView.get(2), deckCardMap.get(2));
+            br.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void openDeck(File file){
+        try {
+            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+            Document doc = dBuilder.parse(file);
+            doc.getDocumentElement().normalize();
+
+            Element[] elements = new Element[4];
+
+            NodeList sections = doc.getElementsByTagName("section");
+            for(int i=0; i<sections.getLength(); i++){
+                Element element = (Element) sections.item(i);
+                switch(element.getAttribute("id")){
+                    case "commander":
+                        elements[0] = element;
+                        break;
+                    case "main":
+                        elements[1] = element;
+                        break;
+                    case "sideboard":
+                        elements[2] = element;
+                        break;
+                    case "maybeboard":
+                        elements[3] = element;
+                        break;
+                }
+            }
+
+            System.out.println(elements[1] == null);
+
+            for(int i=0; i<elements.length; i++){
+                if(elements[i] != null) {
+                    System.out.println(elements[i].getNodeName());
+                    NodeList children = elements[i].getChildNodes();
+                    for (int j = 0; j < children.getLength(); j++) {
+                        org.w3c.dom.Node child = children.item(j);
+                        if (child.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE) {
+                            Element element = (Element) child;
+                            Element attr = ((Element) element.getElementsByTagName("card").item(0));
+
+                            String name = element.getAttribute("id");
+                            String setCode = attr.getAttribute("set");
+                            int count = Integer.parseInt(attr.getAttribute("count"));
+
+                            CardData card = null;
+                            for (CardData cardData : allCards) {
+                                if (cardData.getName().equalsIgnoreCase(name) && cardData.getSetCode().equalsIgnoreCase(setCode)) {
+                                    card = cardData;
+                                    break;
+                                }
+                            }
+
+                            if (card != null) {
+                                deckCardMap.get(i).put(card, count);
+                                updateDeckCardListView(deckListView.get(i), deckCardMap.get(i));
+                            }
+                        }
+                    }
+                }
+            }
+
+        } catch (SAXException e) {
+            e.printStackTrace();
+        } catch (ParserConfigurationException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void openJDeck(File file){
+        try {
+            JSONParser parser = new JSONParser();
+            JSONObject deckObj = (JSONObject) parser.parse(new FileReader(deckFile));
+
+            if (deckObj.containsKey("name")) {
+                deckNameTextField.setText(deckObj.get("name").toString());
+            }
+
+            for(int i=0; i<deckCardMap.size(); i++){
+                deckCardMap.get(i).clear();
+                if (deckObj.containsKey("section" + i)) {
+                    JSONArray cardsArray = (JSONArray) deckObj.get("section" + i);
+                    for(Object card : cardsArray){
+                        JSONObject cardObj = (JSONObject) card;
+                        int count = 1;
+
+                        if (cardObj.containsKey("count")) {
+                            count = Integer.parseInt(cardObj.get("count").toString());
+                        }
+
+                        if (cardObj.containsKey("multiverseId")) {
+                            for (CardData cardData : allCards) {
+                                if (cardData.getMultiverseId().equals(cardObj.get("multiverseId").toString())) {
+                                    deckCardMap.get(i).put(cardData, count);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                updateDeckCardListView(deckListView.get(i), deckCardMap.get(i));
+            }
+
+        } catch (IOException e1) {
+            e1.printStackTrace();
+        } catch (ParseException e1) {
+            e1.printStackTrace();
+        }
+    }
+
+    private void saveAsDec(File file){
+        StringBuilder deckStr = new StringBuilder();
+
+        for(CardData cardData : deckCardMap.get(0).keySet()){
+            deckStr.append(Integer.toString(deckCardMap.get(0).get(cardData)) + " " + cardData.getName() + "\n");
+        }
+        for(CardData cardData : deckCardMap.get(1).keySet()){
+            deckStr.append(Integer.toString(deckCardMap.get(1).get(cardData)) + " " + cardData.getName() + "\n");
+        }
+
+        deckStr.append("//Sideboard\n");
+        for(CardData cardData : deckCardMap.get(2).keySet()){
+            deckStr.append("SB: " + Integer.toString(deckCardMap.get(2).get(cardData)) + " " + cardData.getName() + "\n");
+        }
+        for(CardData cardData : deckCardMap.get(3).keySet()){
+            deckStr.append("SB: " + Integer.toString(deckCardMap.get(3).get(cardData)) + " " + cardData.getName() + "\n");
+        }
+
+        try {
+            FileWriter fw = new FileWriter(file);
+            fw.write(deckStr.toString());
+            fw.flush();
+            fw.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void saveAsDeck(File file){
+        StringBuilder deckStr = new StringBuilder();
+        deckStr.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+        deckStr.append("<deck game=\"mtg\" mode=\"Constructed\" format=\"Standard\" name=\"\">");
+
+        deckStr.append("<section id=\"commander\">");
+        for(CardData cardData : deckCardMap.get(0).keySet()){
+            HashMap<CardData, Integer> map = deckCardMap.get(0);
+            deckStr.append("<item id=\"" + cardData.getName() + "\">");
+            deckStr.append("<card set=\"" + cardData.getSetCode() + "\" lang=\"EN\" count=\"" + map.get(cardData) + "\"/>");
+            deckStr.append("</item>");
+        }
+        deckStr.append("</section>");
+
+        deckStr.append("<section id=\"main\">");
+        for(CardData cardData : deckCardMap.get(1).keySet()){
+            HashMap<CardData, Integer> map = deckCardMap.get(1);
+            deckStr.append("<item id=\"" + cardData.getName() + "\">");
+            deckStr.append("<card set=\"" + cardData.getSetCode() + "\" lang=\"EN\" count=\"" + map.get(cardData) + "\"/>");
+            deckStr.append("</item>");
+        }
+        deckStr.append("</section>");
+
+        deckStr.append("<section id=\"sideboard\">");
+        for(CardData cardData : deckCardMap.get(2).keySet()){
+            HashMap<CardData, Integer> map = deckCardMap.get(2);
+            deckStr.append("<item id=\"" + cardData.getName() + "\">");
+            deckStr.append("<card set=\"" + cardData.getSetCode() + "\" lang=\"EN\" count=\"" + map.get(cardData) + "\"/>");
+            deckStr.append("</item>");
+        }
+        deckStr.append("</section>");
+
+        deckStr.append("<section id=\"maybeboard\">");
+        for(CardData cardData : deckCardMap.get(3).keySet()){
+            HashMap<CardData, Integer> map = deckCardMap.get(3);
+            deckStr.append("<item id=\"" + cardData.getName() + "\">");
+            deckStr.append("<card set=\"" + cardData.getSetCode() + "\" lang=\"EN\" count=\"" + map.get(cardData) + "\"/>");
+            deckStr.append("</item>");
+        }
+        deckStr.append("</section>");
+        deckStr.append("</deck>");
+
+        try {
+            FileWriter fw = new FileWriter(file);
+            fw.write(deckStr.toString());
+            fw.flush();
+            fw.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void saveAsJDeck(File file){
+        JSONObject deckObj = new JSONObject();
+        deckObj.put("name", deckNameTextField.getText());
+
+        for(int i=0; i<deckCardMap.size(); i++){
+            JSONArray cardsArray = new JSONArray();
+            for(CardData cardData : deckCardMap.get(i).keySet()){
+                JSONObject cardObj = new JSONObject();
+
+                cardObj.put("count", deckCardMap.get(i).get(cardData));
+                cardObj.put("multiverseId", cardData.getMultiverseId());
+
+                cardsArray.add(cardObj);
+            }
+
+            deckObj.put("section" + i, cardsArray);
+        }
+
+        try {
+            FileWriter fw = new FileWriter(file);
+            fw.write(deckObj.toJSONString());
+            fw.flush();
+            fw.close();
+        } catch (IOException e1) {
+            e1.printStackTrace();
+        }
     }
 
     private void setSaved(boolean val, Stage primaryStage){
