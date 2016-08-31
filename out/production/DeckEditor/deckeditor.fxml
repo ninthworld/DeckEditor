@@ -44,7 +44,7 @@
                <center>
                   <TabPane id="deckTabPane" prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
                     <tabs>
-                        <Tab text="Commander">
+                        <Tab text="Commander (0)">
                            <content>
                               <BorderPane>
                                  <center>
@@ -52,7 +52,7 @@
                                  </center>
                               </BorderPane>
                            </content></Tab>
-                      <Tab text="Main Board">
+                      <Tab text="Mainboard (0)">
                            <content>
                               <BorderPane>
                                  <center>
@@ -60,7 +60,7 @@
                                  </center>
                               </BorderPane>
                            </content></Tab>
-                      <Tab text="Side Board">
+                      <Tab text="Sideboard (0)">
                            <content>
                               <BorderPane>
                                  <center>
@@ -68,7 +68,7 @@
                                  </center>
                               </BorderPane>
                            </content></Tab>
-                        <Tab text="Maybe Board">
+                        <Tab text="Maybeboard (0)">
                            <content>
                               <BorderPane>
                                  <center>

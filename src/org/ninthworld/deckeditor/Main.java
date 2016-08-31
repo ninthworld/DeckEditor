@@ -843,15 +843,21 @@ public class Main extends Application {
 
                             CardData card = null;
                             for (CardData cardData : allCards) {
-                                if (cardData.getName().equalsIgnoreCase(name) && cardData.getSetCode().equalsIgnoreCase(setCode)) {
+                                String cardName = cardData.getName().replaceAll("Æ", "AE").replaceAll(" // ", "_").toLowerCase();
+
+                                if (cardName.equals(name.toLowerCase())){
                                     card = cardData;
-                                    break;
+                                    if(cardData.getSetCode().equalsIgnoreCase(setCode)){
+                                        break;
+                                    }
                                 }
                             }
 
                             if (card != null) {
                                 deckCardMap.get(i).put(card, count);
                                 updateDeckCardListView(deckListView.get(i), deckCardMap.get(i));
+                            }else{
+                                System.out.println(name + " " + setCode);
                             }
                         }
                     }
@@ -942,14 +948,14 @@ public class Main extends Application {
         deckStr.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
         deckStr.append("<deck game=\"mtg\" mode=\"Constructed\" format=\"Standard\" name=\"\">");
 
-        deckStr.append("<section id=\"commander\">");
+        /*deckStr.append("<section id=\"commander\">");
         for(CardData cardData : deckCardMap.get(0).keySet()){
             HashMap<CardData, Integer> map = deckCardMap.get(0);
             deckStr.append("<item id=\"" + cardData.getName() + "\">");
             deckStr.append("<card set=\"" + cardData.getSetCode() + "\" lang=\"EN\" count=\"" + map.get(cardData) + "\"/>");
             deckStr.append("</item>");
         }
-        deckStr.append("</section>");
+        deckStr.append("</section>");*/
 
         deckStr.append("<section id=\"main\">");
         for(CardData cardData : deckCardMap.get(1).keySet()){
@@ -969,14 +975,14 @@ public class Main extends Application {
         }
         deckStr.append("</section>");
 
-        deckStr.append("<section id=\"maybeboard\">");
+        /*deckStr.append("<section id=\"maybeboard\">");
         for(CardData cardData : deckCardMap.get(3).keySet()){
             HashMap<CardData, Integer> map = deckCardMap.get(3);
             deckStr.append("<item id=\"" + cardData.getName() + "\">");
             deckStr.append("<card set=\"" + cardData.getSetCode() + "\" lang=\"EN\" count=\"" + map.get(cardData) + "\"/>");
             deckStr.append("</item>");
         }
-        deckStr.append("</section>");
+        deckStr.append("</section>");*/
         deckStr.append("</deck>");
 
         try {
@@ -1470,6 +1476,20 @@ public class Main extends Application {
             borderPane.setRight(manaHBox);
             listView.getItems().add(borderPane);
         });
+
+        int count = 0;
+        for(int i : cards.values()){
+            count += i;
+        }
+
+        for(Tab tab : deckTabPane.getTabs()){
+            if(tab.getContent() == listView.getParent()){
+                String str = tab.getText();
+                str = str.substring(0, str.indexOf("("));
+                str += "(" + count + ")";
+                tab.setText(str);
+            }
+        }
 
         updateCardPreview(listView, cards);
     }
