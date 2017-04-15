@@ -1,10 +1,7 @@
-package org.ninthworld.deckeditor;
+package org.ninthworld.deckeditorfx;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 
 /**
  * Created by NinthWorld on 4/5/2016.

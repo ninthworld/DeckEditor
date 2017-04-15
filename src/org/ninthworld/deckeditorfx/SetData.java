@@ -1,4 +1,4 @@
-package org.ninthworld.deckeditor;
+package org.ninthworld.deckeditorfx;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;

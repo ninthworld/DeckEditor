@@ -1,4 +1,4 @@
-package org.ninthworld.deckeditor;
+package org.ninthworld.deckeditorfx;
 
 import javafx.application.Application;
 import javafx.collections.FXCollections;
@@ -90,7 +90,7 @@ public class Main extends Application {
     public void start(Stage primaryStage) throws Exception {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/deckeditor.fxml"));
         loader.setController(new Main());
-        Parent root = loader.load(); // FXMLLoader.load(getClass().getResource("deckeditor.fxml"));
+        Parent root = loader.load(); // FXMLLoader.load(getClass().getResource("deckeditorfx.fxml"));
         primaryStage.setTitle(titlePrefix + "Untitled [*]");
         primaryStage.setScene(new Scene(root, 1280, 680));
         primaryStage.show();
